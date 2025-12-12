@@ -1,0 +1,10 @@
+{
+  "Records": [
+    {
+      "s3": {
+        "bucket": { "name": "dvf-bronze" },
+        "object": { "key": "bronze/year=2025/valeursfoncieres-2025.zip" }
+      }
+    }
+  ]
+}
