@@ -1,0 +1,11 @@
+{
+  "year": "2025",
+  "source_files": [
+    "silver/year=2025/dvf_2025.csv.gz"
+  ],
+  "rows_total": 1387077,
+  "rows_used": 444475,
+  "avg_price_m2": 15008.523173318708,
+  "generated_at_utc": "2025-12-12T12:24:20.436229Z",
+  "duration_sec": 9.028
+}
