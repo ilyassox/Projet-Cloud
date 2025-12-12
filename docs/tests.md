@@ -42,7 +42,7 @@ aws s3 ls --endpoint-url http://localhost:4566 --profile localstack
 
 **Screenshot** :
 
-![Liste des buckets S3](./screenshots/01_s3_buckets_list.png)
+![Liste des buckets S3](./Screenshots/01_s3_buckets_list.png)
 
 ---
 
@@ -72,7 +72,7 @@ aws lambda list-functions \
 
 **Screenshot** :
 
-![Liste des Lambda Functions](./screenshots/02_lambda_functions_list.png)
+![Liste des Lambda Functions](./Screenshots/02_lambda_functions_list.png)
 
 ---
 
@@ -97,7 +97,7 @@ aws sqs list-queues \
 
 **Screenshot** :
 
-![Liste des queues SQS](./screenshots/03_sqs_queues_list.png)
+![Liste des queues SQS](./Screenshots/03_sqs_queues_list.png)
 
 ---
 
@@ -123,7 +123,7 @@ aws sns list-topics \
 
 **Screenshot** :
 
-![Liste des topics SNS](./screenshots/04_sns_topics_list.png)
+![Liste des topics SNS](./Screenshots/04_sns_topics_list.png)
 
 ---
 
@@ -162,7 +162,7 @@ aws lambda invoke \
 
 **Screenshot** :
 
-![Invocation Lambda Bronze](./screenshots/05_bronze_invoke.png)
+![Invocation Lambda Bronze](./Screenshots/05_bronze_invoke.png)
 
 ---
 
@@ -185,7 +185,7 @@ aws s3 ls s3://dvf-bronze/bronze/ \
 
 **Screenshot** :
 
-![Contenu bucket Bronze](./screenshots/06_bronze_bucket_content.png)
+![Contenu bucket Bronze](./Screenshots/06_bronze_bucket_content.png)
 
 ---
 
@@ -211,7 +211,7 @@ aws logs tail /aws/lambda/dvf-ingest-to-bronze \
 
 **Screenshot** :
 
-![Logs Lambda Bronze](./screenshots/07_bronze_lambda_logs.png)
+![Logs Lambda Bronze](./Screenshots/07_bronze_lambda_logs.png)
 
 ---
 
@@ -236,7 +236,7 @@ aws s3 ls s3://dvf-silver/silver/ \
 
 **Screenshot** :
 
-![Contenu bucket Silver](./screenshots/08_silver_bucket_content.png)
+![Contenu bucket Silver](./Screenshots/08_silver_bucket_content.png)
 
 ---
 
@@ -277,7 +277,7 @@ id;date_mutation;numero_disposition;nature_mutation;valeur_fonciere;adresse_nume
 
 **Screenshot** :
 
-![Contenu fichier Silver](./screenshots/09_silver_file_content.png)
+![Contenu fichier Silver](./Screenshots/09_silver_file_content.png)
 
 ---
 
@@ -302,7 +302,7 @@ aws logs tail /aws/lambda/dvf-bronze-to-silver \
 
 **Screenshot** :
 
-![Logs Lambda Silver](./screenshots/10_silver_lambda_logs.png)
+![Logs Lambda Silver](./Screenshots/10_silver_lambda_logs.png)
 
 ---
 
@@ -330,7 +330,7 @@ aws s3 ls s3://dvf-gold/gold/ \
 
 **Screenshot** :
 
-![Contenu bucket Gold](./screenshots/11_gold_bucket_content.png)
+![Contenu bucket Gold](./Screenshots/11_gold_bucket_content.png)
 
 ---
 
@@ -366,7 +366,7 @@ cat avg_price_m2_2023.json | jq .
 
 **Screenshot** :
 
-![Fichier Gold prix/m²](./screenshots/12_gold_price_m2_content.png)
+![Fichier Gold prix/m²](./Screenshots/12_gold_price_m2_content.png)
 
 ---
 
@@ -412,7 +412,7 @@ cat count_by_type_2023.json | jq .
 
 **Screenshot** :
 
-![Fichier Gold count by type](./screenshots/13_gold_count_by_type_content.png)
+![Fichier Gold count by type](./Screenshots/13_gold_count_by_type_content.png)
 
 ---
 
@@ -438,7 +438,7 @@ aws logs tail /aws/lambda/dvf-gold-price-m2 \
 
 **Screenshot** :
 
-![Logs Lambda Gold prix/m²](./screenshots/14_gold_price_m2_logs.png)
+![Logs Lambda Gold prix/m²](./Screenshots/14_gold_price_m2_logs.png)
 
 ---
 
@@ -464,7 +464,7 @@ aws logs tail /aws/lambda/dvf-gold-count-by-type \
 
 **Screenshot** :
 
-![Logs Lambda Gold count by type](./screenshots/15_gold_count_by_type_logs.png)
+![Logs Lambda Gold count by type](./Screenshots/15_gold_count_by_type_logs.png)
 
 ---
 
@@ -505,7 +505,7 @@ aws s3api get-bucket-notification-configuration \
 
 **Screenshot** :
 
-![Config S3 Notification Bronze](./screenshots/16_s3_notif_bronze.png)
+![Config S3 Notification Bronze](./Screenshots/16_s3_notif_bronze.png)
 
 ---
 
@@ -544,7 +544,7 @@ aws s3api get-bucket-notification-configuration \
 
 **Screenshot** :
 
-![Config S3 Notification Silver](./screenshots/17_s3_notif_silver.png)
+![Config S3 Notification Silver](./Screenshots/17_s3_notif_silver.png)
 
 ---
 
@@ -581,7 +581,7 @@ aws sqs get-queue-attributes \
 
 **Screenshot** :
 
-![Attributs SQS Queue](./screenshots/18_sqs_queue_attributes.png)
+![Attributs SQS Queue](./Screenshots/18_sqs_queue_attributes.png)
 
 ---
 
@@ -610,7 +610,7 @@ aws sqs get-queue-attributes \
 
 **Screenshot** :
 
-![Messages SQS Queue](./screenshots/19_sqs_queue_messages.png)
+![Messages SQS Queue](./Screenshots/19_sqs_queue_messages.png)
 
 ---
 
@@ -644,7 +644,7 @@ aws lambda list-event-source-mappings \
 
 **Screenshot** :
 
-![Event Source Mappings](./screenshots/20_event_source_mappings.png)
+![Event Source Mappings](./Screenshots/20_event_source_mappings.png)
 
 ---
 
@@ -676,7 +676,7 @@ aws lambda get-event-source-mapping \
 
 **Screenshot** :
 
-![Event Source Mapping Details](./screenshots/21_event_source_mapping_details.png)
+![Event Source Mapping Details](./Screenshots/21_event_source_mapping_details.png)
 
 ---
 
@@ -711,7 +711,7 @@ aws sns publish \
 
 **Screenshot** :
 
-![SNS Publish Test](./screenshots/22_sns_publish_test.png)
+![SNS Publish Test](./Screenshots/22_sns_publish_test.png)
 
 ---
 
@@ -736,7 +736,7 @@ aws logs tail /aws/lambda/dvf-sns-logger \
 
 **Screenshot** :
 
-![Logs SNS Logger](./screenshots/23_sns_logger_logs.png)
+![Logs SNS Logger](./Screenshots/23_sns_logger_logs.png)
 
 ---
 
@@ -765,7 +765,7 @@ aws sns list-subscriptions \
 
 **Screenshot** :
 
-![SNS Subscriptions](./screenshots/24_sns_subscriptions.png)
+![SNS Subscriptions](./Screenshots/24_sns_subscriptions.png)
 
 ---
 
@@ -821,7 +821,7 @@ aws cloudwatch list-metrics \
 
 **Screenshot** :
 
-![CloudWatch Metrics List](./screenshots/25_cloudwatch_metrics_list.png)
+![CloudWatch Metrics List](./Screenshots/25_cloudwatch_metrics_list.png)
 
 ---
 
@@ -857,7 +857,7 @@ aws cloudwatch get-metric-statistics \
 
 **Screenshot** :
 
-![CloudWatch Metric Statistics](./screenshots/26_cloudwatch_metric_stats.png)
+![CloudWatch Metric Statistics](./Screenshots/26_cloudwatch_metric_stats.png)
 
 ---
 
@@ -887,7 +887,7 @@ aws sqs get-queue-attributes \
 
 **Screenshot** :
 
-![DLQ Messages Count](./screenshots/27_dlq_messages_count.png)
+![DLQ Messages Count](./Screenshots/27_dlq_messages_count.png)
 
 ---
 
@@ -925,7 +925,7 @@ aws sqs receive-message \
 
 **Screenshot** :
 
-![DLQ Message After Failure](./screenshots/28_dlq_message_after_failure.png)
+![DLQ Message After Failure](./Screenshots/28_dlq_message_after_failure.png)
 
 ---
 
@@ -962,7 +962,7 @@ Tous les tests démontrent que le pipeline DVF fonctionne end-to-end :
 ✅ CloudWatch Metrics publiées par chaque Lambda  
 ✅ Pas de messages en DLQ (aucun échec)  
 
-Le pipeline est **prêt pour la soumission**.
+
 
 ---
 
