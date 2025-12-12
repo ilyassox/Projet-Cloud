@@ -1,0 +1,7 @@
+{
+  "Records": [
+    {
+      "body": "{\"Records\":[{\"s3\":{\"bucket\":{\"name\":\"dvf-silver\"},\"object\":{\"key\":\"silver/year=2025/ValeursFoncieres-2025-S1.csv.gz\"}}}]}"
+    }
+  ]
+}

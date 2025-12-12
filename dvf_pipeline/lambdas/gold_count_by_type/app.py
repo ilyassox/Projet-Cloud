@@ -1,157 +1,165 @@
-import os
-import json
-import csv
-import gzip
-import time
-from collections import Counter
-from urllib.parse import unquote_plus
+import os, io, re, csv, gzip, json, time
 import boto3
 from datetime import datetime
 
 s3 = boto3.client("s3")
 sns = boto3.client("sns")
+cw  = boto3.client("cloudwatch")
 
 SILVER_BUCKET = os.environ.get("SILVER_BUCKET", "dvf-silver")
 GOLD_BUCKET   = os.environ.get("GOLD_BUCKET", "dvf-gold")
 SNS_TOPIC_ARN = os.environ.get("SNS_TOPIC_ARN", "")
 
-# colonnes possibles DVF (selon millésime)
-TYPE_COL_CANDIDATES = [
-    "type_local", "type local",
-    "nature_mutation", "nature mutation"
-]
+def put_metric(name, value, unit="Count"):
+    cw.put_metric_data(
+        Namespace="DVF_Pipeline",
+        MetricData=[{"MetricName": name, "Value": float(value), "Unit": unit}],
+    )
 
-def extract_s3_records(event: dict):
+def safe_int(x):
+    try:
+        return int(str(x).strip())
+    except:
+        return None
+
+def normalize_cp(cp: str) -> str:
+    cp = (cp or "").strip()
+    return cp.zfill(5) if cp.isdigit() else cp
+
+def extract_year_from_key(key: str) -> str:
+    m = re.search(r"year=(\d{4})", key)
+    return m.group(1) if m else "unknown"
+
+def parse_s3_event_payload(payload: dict):
+    """payload is an S3 event (Records[].s3.bucket.name + Records[].s3.object.key)"""
+    out = []
+    for r in payload.get("Records", []):
+        s3info = r.get("s3", {})
+        b = s3info.get("bucket", {}).get("name")
+        k = s3info.get("object", {}).get("key")
+        if b and k:
+            out.append((b, k))
+    return out
+
+def parse_from_sqs_event(event: dict):
+    """event is an SQS event: Records[].body contains S3 event JSON string"""
+    out = []
+    for r in event.get("Records", []):
+        body = r.get("body", "")
+        if not body or not body.strip():
+            continue
+        payload = json.loads(body)  # can raise -> handled by caller
+        out.extend(parse_s3_event_payload(payload))
+    return out
+
+def get_s3_targets(event: dict):
     """
-    Supporte:
-    - Event S3 direct: event["Records"][i]["s3"]["object"]["key"]
-    - Event SQS: event["Records"][i]["body"] contient JSON S3 event
+    Accepts:
+    - SQS event (Records[].body is JSON S3 event)
+    - S3 event directly (Records[].s3...)
     """
-    records = event.get("Records", [])
-    if not records:
-        return []
-
-    # SQS wrapper
-    if isinstance(records[0], dict) and "body" in records[0]:
-        out = []
-        for msg in records:
-            body = msg.get("body", "")
-            try:
-                payload = json.loads(body)
-            except Exception:
-                continue
-            out.extend(payload.get("Records", []))
-        return out
-
-    # S3 direct
-    return records
-
-def find_type_column(fieldnames):
-    lower = {c.lower(): c for c in fieldnames}
-    for cand in TYPE_COL_CANDIDATES:
-        if cand.lower() in lower:
-            return lower[cand.lower()]
-    # fallback: tenter "type_local" exact si existe
-    return lower.get("type_local")
+    # Heuristic: if Records[0] has 'body', treat as SQS
+    recs = event.get("Records", [])
+    if recs and isinstance(recs[0], dict) and "body" in recs[0]:
+        return parse_from_sqs_event(event)
+    return parse_s3_event_payload(event)
 
 def handler(event, context):
     t0 = time.time()
-    print("[GOLD_COUNT] raw event:", json.dumps(event)[:2000])
+    files = 0
+    errors = 0
+    rows_in = 0
 
-    s3recs = extract_s3_records(event)
-    if not s3recs:
-        print("[GOLD_COUNT] No records -> exit")
-        return {"statusCode": 200, "message": "no records"}
+    print("[GOLD_COUNT] Event keys:", list(event.keys()))
+    try:
+        targets = get_s3_targets(event)
+    except Exception as e:
+        errors += 1
+        print("[GOLD_COUNT][ERROR] cannot parse event:", str(e))
+        put_metric("GoldCountErrors", errors)
+        raise
 
-    # On agrège sur tous les records reçus (souvent 1)
-    grand_total = 0
-    counts = Counter()
-    processed_files = []
+    if not targets:
+        print("[GOLD_COUNT] No targets found in event. Nothing to do.")
+        return {"statusCode": 200, "files": 0, "rows_in": 0, "errors": 0}
 
-    for rec in s3recs:
-        bucket = rec["s3"]["bucket"]["name"]
-        key_raw = rec["s3"]["object"]["key"]
-        key = unquote_plus(key_raw)  # ✅ IMPORTANT (year%3D2025 -> year=2025)
+    for bucket, key in targets:
+        # URL-encoded key sometimes: year%3D2025 -> year=2025
+        key = key.replace("%3D", "=")
 
-        # On ne traite que silver/
-        if not key.startswith("silver/") or not (key.endswith(".csv.gz") or key.endswith(".gz")):
-            print("[GOLD_COUNT] skip key:", key)
+        if not key.startswith("silver/") or not key.endswith(".csv.gz"):
+            print("[GOLD_COUNT] Skip non-silver gz:", bucket, key)
             continue
 
+        year = extract_year_from_key(key)
         tmp_in = "/tmp/in.csv.gz"
-        print(f"[GOLD_COUNT] downloading s3://{bucket}/{key}")
-        s3.download_file(bucket, key, tmp_in)
 
-        # lecture streaming gzip csv
-        with gzip.open(tmp_in, "rt", encoding="utf-8", errors="ignore", newline="") as f:
-            reader = csv.DictReader(f, delimiter=";")
-            if not reader.fieldnames:
-                print("[GOLD_COUNT] empty header -> skip", key)
-                continue
-
-            type_col = find_type_column(reader.fieldnames)
-            if not type_col:
-                # si pas trouvé, on log et on sort
-                print("[GOLD_COUNT] type column not found in:", reader.fieldnames[:50])
-                continue
-
-            file_total = 0
-            for row in reader:
-                v = (row.get(type_col) or "").strip()
-                if v == "":
-                    v = "UNKNOWN"
-                counts[v] += 1
-                file_total += 1
-
-            print(f"[GOLD_COUNT] rows read for {key}: {file_total}")
-            grand_total += file_total
-            processed_files.append(key)
-
-    if not processed_files:
-        print("[GOLD_COUNT] No processed files -> exit")
-        return {"statusCode": 200, "message": "no silver files processed"}
-
-    # Déterminer l'année depuis la key (silver/year=2025/...)
-    # si multiple, on met "multi"
-    years = set()
-    for k in processed_files:
-        if "year=" in k:
-            try:
-                years.add(k.split("year=")[1].split("/")[0])
-            except Exception:
-                pass
-    year_tag = years.pop() if len(years) == 1 else "multi"
-
-    out_key = f"gold/year={year_tag}/count_by_type_{year_tag}.json"
-    payload_out = {
-        "year": year_tag,
-        "source_files": processed_files,
-        "total_rows": grand_total,
-        "counts": dict(counts),
-        "generated_at_utc": datetime.utcnow().isoformat() + "Z",
-        "duration_sec": round(time.time() - t0, 3),
-    }
-
-    tmp_out = "/tmp/out.json"
-    with open(tmp_out, "w", encoding="utf-8") as fp:
-        json.dump(payload_out, fp, ensure_ascii=False, indent=2)
-
-    print(f"[GOLD_COUNT] uploading -> s3://{GOLD_BUCKET}/{out_key}")
-    s3.upload_file(tmp_out, GOLD_BUCKET, out_key)
-
-    if SNS_TOPIC_ARN:
+        print(f"[GOLD_COUNT] Processing s3://{bucket}/{key}")
         try:
-            sns.publish(
-                TopicArn=SNS_TOPIC_ARN,
-                Message=json.dumps({
-                    "stage": "gold_count_by_type",
-                    "year": year_tag,
-                    "gold_key": out_key,
-                    "total_rows": grand_total,
-                    "duration_sec": payload_out["duration_sec"]
-                })
-            )
-        except Exception as e:
-            print("[GOLD_COUNT][WARN] sns publish failed:", str(e))
+            s3.download_file(bucket, key, tmp_in)
 
-    return {"statusCode": 200, "gold_key": out_key, "total_rows": grand_total}
+            counts = {}  # (year, cp, type_local) -> count
+
+            with gzip.open(tmp_in, "rt", encoding="utf-8", errors="ignore", newline="") as f:
+                reader = csv.DictReader(f, delimiter=";")
+                # handle possible column naming variations
+                cols = [c.lower() for c in (reader.fieldnames or [])]
+                # candidates in DVF normalized:
+                # type_local, code_postal (or code_postal_commune), commune, etc.
+                def pick_col(*cands):
+                    for c in cands:
+                        if c in cols:
+                            return c
+                    return None
+
+                col_type = pick_col("type_local", "type_local_1", "type")
+                col_cp   = pick_col("code_postal", "code_postal_commune", "codepostal")
+                if not col_type or not col_cp:
+                    raise RuntimeError(f"Missing columns. Found={reader.fieldnames}")
+
+                for row in reader:
+                    rows_in += 1
+                    t = (row.get(col_type) or "").strip()
+                    cp = normalize_cp(row.get(col_cp) or "")
+                    if not t:
+                        continue
+                    k2 = (year, cp, t)
+                    counts[k2] = counts.get(k2, 0) + 1
+
+            # Write JSON output (small)
+            out_key = f"gold/year={year}/count_by_type_{year}.json"
+            payload = {
+                "year": year,
+                "generated_at": datetime.utcnow().isoformat(),
+                "source_key": key,
+                "counts": [
+                    {"code_postal": cp, "type_local": t, "count": c}
+                    for (y, cp, t), c in sorted(counts.items(), key=lambda x: (-x[1], x[0][1], x[0][2]))
+                ],
+            }
+            s3.put_object(
+                Bucket=GOLD_BUCKET,
+                Key=out_key,
+                Body=json.dumps(payload, ensure_ascii=False).encode("utf-8"),
+                ContentType="application/json",
+            )
+            print("[GOLD_COUNT] Wrote:", f"s3://{GOLD_BUCKET}/{out_key}")
+            files += 1
+
+            if SNS_TOPIC_ARN:
+                sns.publish(
+                    TopicArn=SNS_TOPIC_ARN,
+                    Message=json.dumps({"stage": "gold_count_by_type", "year": year, "out": out_key, "rows_in": rows_in})
+                )
+
+        except Exception as e:
+            errors += 1
+            print("[GOLD_COUNT][ERROR]", bucket, key, str(e))
+
+    put_metric("GoldCountRuns", 1)
+    put_metric("GoldCountFiles", files)
+    put_metric("GoldCountRowsIn", rows_in)
+    put_metric("GoldCountErrors", errors)
+    put_metric("GoldCountDurationSec", time.time() - t0, unit="Seconds")
+
+    return {"statusCode": 200, "files": files, "rows_in": rows_in, "errors": errors}
