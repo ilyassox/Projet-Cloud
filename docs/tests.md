@@ -72,7 +72,7 @@ aws lambda list-functions \
 
 **Screenshot** :
 
-![Liste des Lambda Functions](./screenshots/02_lambda_functions_list.png)
+![Liste des Lambda Functions](./Screenshots/02_lambda_functions_list.png)
 
 ---
 
