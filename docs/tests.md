@@ -42,7 +42,7 @@ aws s3 ls --endpoint-url http://localhost:4566 --profile localstack
 
 **Screenshot** :
 
-![Liste des buckets S3](./screenshots/01_s3_buckets_list.png)
+![Liste des buckets S3](screenshots/01_s3_buckets_list.png)
 
 ---
 
