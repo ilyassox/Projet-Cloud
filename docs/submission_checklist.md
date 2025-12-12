@@ -22,11 +22,9 @@ projet-dvf-[nom]-[prenom].zip
 │       ├── 02_lambda_functions_list.png
 │       ├── 03_sqs_queues_list.png
 │       ├── 04_sns_topics_list.png
-│       ├── 05_bronze_invoke.png
 │       ├── 06_bronze_bucket_content.png
 │       ├── 07_bronze_lambda_logs.png
 │       ├── 08_silver_bucket_content.png
-│       ├── 09_silver_file_content.png
 │       ├── 10_silver_lambda_logs.png
 │       ├── 11_gold_bucket_content.png
 │       ├── 12_gold_price_m2_content.png
@@ -36,16 +34,11 @@ projet-dvf-[nom]-[prenom].zip
 │       ├── 16_s3_notif_bronze.png
 │       ├── 17_s3_notif_silver.png
 │       ├── 18_sqs_queue_attributes.png
-│       ├── 19_sqs_queue_messages.png
 │       ├── 20_event_source_mappings.png
-│       ├── 21_event_source_mapping_details.png
 │       ├── 22_sns_publish_test.png
 │       ├── 23_sns_logger_logs.png
 │       ├── 24_sns_subscriptions.png
-│       ├── 25_cloudwatch_metrics_list.png
-│       ├── 26_cloudwatch_metric_stats.png
-│       ├── 27_dlq_messages_count.png
-│       └── 28_dlq_message_after_failure.png (optionnel)
+│       └── 25_cloudwatch_metrics_list.png
 │
 ├── dvf_pipeline/
 │   ├── terraform/
@@ -204,11 +197,9 @@ Vérifier que tous les screenshots suivants sont présents dans `docs/screenshot
 - [ ] 02_lambda_functions_list.png
 - [ ] 03_sqs_queues_list.png
 - [ ] 04_sns_topics_list.png
-- [ ] 05_bronze_invoke.png
 - [ ] 06_bronze_bucket_content.png
 - [ ] 07_bronze_lambda_logs.png
 - [ ] 08_silver_bucket_content.png
-- [ ] 09_silver_file_content.png
 - [ ] 10_silver_lambda_logs.png
 - [ ] 11_gold_bucket_content.png
 - [ ] 12_gold_price_m2_content.png
@@ -218,16 +209,12 @@ Vérifier que tous les screenshots suivants sont présents dans `docs/screenshot
 - [ ] 16_s3_notif_bronze.png
 - [ ] 17_s3_notif_silver.png
 - [ ] 18_sqs_queue_attributes.png
-- [ ] 19_sqs_queue_messages.png
 - [ ] 20_event_source_mappings.png
-- [ ] 21_event_source_mapping_details.png
 - [ ] 22_sns_publish_test.png
 - [ ] 23_sns_logger_logs.png
 - [ ] 24_sns_subscriptions.png
 - [ ] 25_cloudwatch_metrics_list.png
-- [ ] 26_cloudwatch_metric_stats.png
-- [ ] 27_dlq_messages_count.png
-- [ ] 28_dlq_message_after_failure.png (optionnel)
+- [ ] 27_dlq_messages_count.png (optionnel)
 
 ---
 
@@ -375,7 +362,7 @@ terraform plan
 | docs/architecture.md | ✓ |
 | docs/tests.md | ✓ |
 | docs/submission_checklist.md | ✓ |
-| docs/screenshots/ (28 images) | À compléter |
+| docs/screenshots/ (22 images) | ✓ Complète |
 | dvf_pipeline/terraform/*.tf | ✓ |
 | dvf_pipeline/lambdas/**/app.py | ✓ |
 | Archive ZIP finale | À créer |

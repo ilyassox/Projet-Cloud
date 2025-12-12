@@ -160,9 +160,7 @@ aws lambda invoke \
 }
 ```
 
-**Screenshot** :
-
-![Invocation Lambda Bronze](./screenshots/05_bronze_invoke.png)
+**Note** : L'invocation est asynchrone (Event), le résultat apparaît dans les logs après 10-30 secondes.
 
 ---
 
@@ -274,10 +272,7 @@ id;date_mutation;numero_disposition;nature_mutation;valeur_fonciere;adresse_nume
 - Délimiteur : `;` ✓
 - Colonnes en snake_case ✓
 - Pas de valeurs NULL brutes ✓
-
-**Screenshot** :
-
-![Contenu fichier Silver](./screenshots/09_silver_file_content.png)
+- Format CSV gzip ✓
 
 ---
 
@@ -608,10 +603,6 @@ aws sqs get-queue-attributes \
 
 **Note** : 0 car les messages sont consommés immédiatement par les Lambda Gold.
 
-**Screenshot** :
-
-![Messages SQS Queue](./screenshots/19_sqs_queue_messages.png)
-
 ---
 
 ## 7. Vérification des Event Source Mappings
@@ -673,10 +664,7 @@ aws lambda get-event-source-mapping \
 **Vérification** :
 - `BatchSize` = 10 ✓
 - `State` = Enabled ✓
-
-**Screenshot** :
-
-![Event Source Mapping Details](./screenshots/21_event_source_mapping_details.png)
+- Deux mappings (dvf-gold-price-m2 et dvf-gold-count-by-type) ✓
 
 ---
 
@@ -855,10 +843,6 @@ aws cloudwatch get-metric-statistics \
 }
 ```
 
-**Screenshot** :
-
-![CloudWatch Metric Statistics](./screenshots/26_cloudwatch_metric_stats.png)
-
 ---
 
 ## 10. Test de la Dead Letter Queue
@@ -895,37 +879,7 @@ aws sqs get-queue-attributes \
 
 **Scénario** : forcer un Lambda Gold à échouer (ex: timeout réduit à 1s) pour vérifier le redrive vers DLQ.
 
-**Commande de simulation (PowerShell/Bash)** :
-```bash
-# Modifier lambdas.tf pour réduire timeout de dvf-gold-price-m2 à 1 seconde
-# Appliquer terraform apply
-# Déclencher le pipeline
-# Attendre 5 tentatives d'exécution
-```
-
-**Vérification DLQ après 5 retry** :
-```bash
-aws sqs receive-message \
-  --queue-url http://localhost:4566/000000000000/dvf-silver-dlq \
-  --endpoint-url http://localhost:4566 \
-  --profile localstack
-```
-
-**Expected** :
-```json
-{
-    "Messages": [
-        {
-            "MessageId": "msg-dlq-123",
-            "Body": "{\"Records\":[{\"s3\":{\"bucket\":{\"name\":\"dvf-silver\"}...}}]}"
-        }
-    ]
-}
-```
-
-**Screenshot** :
-
-![DLQ Message After Failure](./screenshots/28_dlq_message_after_failure.png)
+**Note** : Optional - test avancé pour vérifier le redrive vers DLQ en cas d'erreur.
 
 ---
 
